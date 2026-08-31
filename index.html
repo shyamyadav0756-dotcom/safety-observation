@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safety Observation | Milestone Swarna HSE</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        h2 { text-align: center; color: #1a365d; margin-bottom: 5px; }
+        label { font-weight: bold; margin-top: 15px; display: block; color: #333; }
+        input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        button { width: 100%; background: #0056b3; color: white; border: none; padding: 12px; margin-top: 20px; font-size: 16px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #003d80; }
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .login-card { background: white; padding: 30px; border-radius: 8px; text-align: center; width: 300px; }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-card">
+        <h3>HSE Safety Portal</h3>
+        <p style="font-size: 12px; color: #666;">Milestone Swarna Project</p>
+        <input type="password" id="passInput" placeholder="Enter Password (1234)">
+        <button onclick="checkPass()">Login</button>
+        <p id="passErr" style="color:red; display:none; margin-top:10px;">गलत पासवर्ड!</p>
+    </div>
+</div>
+
+<div class="container">
+    <h2>MILESTONES -- SAFETY OBSERVATION</h2>
+    <p style="text-align:center; font-size:13px; color:#555;">Project: SWARNA | HSE Officer: GHANSYAM</p>
+    <hr style="border: 0.5px solid #eee;">
+    
+    <form id="obsForm">
+        <label>Date & Time (तारीख और समय)</label>
+        <input type="datetime-local" id="date_time" required>
+
+        <label>Tower / Location (स्थान / टावर)</label>
+        <input type="text" id="tower" placeholder="उदा. Tower A, Floor 5" required>
+
+        <label>Observation Type (प्रकार)</label>
+        <select id="obs_type">
+            <option value="Unsafe Condition">Unsafe Condition (खतरनाक स्थिति)</option>
+            <option value="Unsafe Act">Unsafe Act (खतरनाक काम)</option>
+            <option value="Safe Practice">Safe Practice (सुरक्षित कार्य)</option>
+        </select>
+
+        <label>Risk Level (जोखिम का स्तर)</label>
+        <select id="risk_level">
+            <option value="Low">Low (कम)</option>
+            <option value="Medium">Medium (मध्यम)</option>
+            <option value="High">High (उच्च)</option>
+            <option value="Critical">Critical (गंभीर)</option>
+        </select>
+
+        <label>Observation Description (विवरण)</label>
+        <textarea id="description" rows="3" placeholder="साइट पर क्या देखा..." required></textarea>
+
+        <label>Immediate Corrective Action (तुरंत की गई कार्रवाई)</label>
+        <textarea id="corrective_action" rows="2" placeholder="मौके पर क्या एक्शन लिया गया..."></textarea>
+
+        <button type="submit" id="submitBtn">Save Observation</button>
+    </form>
+</div>
+
+<script>
+    function checkPass() {
+        const pass = document.getElementById('passInput').value;
+        if(pass === '1234') {
+            document.getElementById('loginOverlay').style.display = 'none';
+        } else {
+            document.getElementById('passErr').style.display = 'block';
+        }
+    }
+
+    const SUPABASE_URL = "https://eqlnoxmfbegkgfemneq.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbG5veG1mYmVna2dmZW1uZXEiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczODMwNzk1NiwiZXhwIjoyMDUzODgzOTU2fQ.6_mS_wF_V_g7uUf3Jq8g6L4hN2K9mY1Vz7X0W3Q";
+
+    async function sendData(tableName, payload) {
+        return fetch(${SUPABASE_URL}/rest/v1/${tableName}, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': Bearer ${SUPABASE_KEY},
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(payload)
+        });
+    }
+
+    document.getElementById('obsForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerText = "Saving...";
+
+        const payload = {
+            created_at: document.getElementById('date_time').value || new Date().toISOString(),
+            tower: document.getElementById('tower').value,
+            observation_type: document.getElementById('obs_type').value,
+            risk_level: document.getElementById('risk_level').value,
+            description: document.getElementById('description').value,
+            corrective_action: document.getElementById('corrective_action').value,
+            project_name: 'SWARNA',
+            hse_officer: 'GHANSYAM'
+        };
+
+        try {
+            let res = await sendData('Safety_observations', payload);
+            
+            if (!res.ok) {
+                res = await sendData('safety_observations', payload);
+            }
+
+            if (res.ok) {
+                alert("Observation Saved Successfully! (डेटाबेस में सेव हो गया)");
+                document.getElementById('obsForm').reset();
+            } else {
+                const errData = await res.json();
+                alert("Database Error: " + (errData.message || res.statusText));
+            }
+        } catch (err) {
+            alert("Network Error: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Save Observation";
+        }
+    });
+</script>
+</body>
+</html>
