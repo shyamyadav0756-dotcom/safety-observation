@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title">Safety Observation | Milestone Swarna HSE</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Safety Observation | Milestone Swarna HSE</title>
+    <!-- Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #1a365d; }
-        label { font-weight: bold; margin-top: 10px; display: block; }
+        h2 { text-align: center; color: #1a365d; margin-bottom: 5px; }
+        label { font-weight: bold; margin-top: 12px; display: block; }
         input, select, textarea { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { width: 100%; background: #0056b3; color: white; border: none; padding: 10px; margin-top: 15px; font-size: 16px; border-radius: 4px; cursor: pointer; }
+        button { width: 100%; background: #0056b3; color: white; border: none; padding: 12px; margin-top: 20px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { background: #003d80; }
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .login-card { background: white; padding: 30px; border-radius: 8px; text-align: center; width: 300px; }
     </style>
 </head>
@@ -24,7 +25,7 @@
         <h3>HSE Safety Portal</h3>
         <input type="password" id="passInput" placeholder="Enter Password (1234)">
         <button onclick="checkPass()">Login</button>
-        <p id="passErr" style="color:red; display:none;">Wrong Password!</p>
+        <p id="passErr" style="color:red; display:none; margin-top:10px;">Wrong Password!</p>
     </div>
 </div>
 
@@ -76,13 +77,10 @@
     }
 
     const SUPABASE_URL = 'https://eqlnoxmfbegkgfemneq.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbG5veG1mYmVna2dmZW1uZXEiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczODMwNzk1NiwiZXhwIjoyMDUzODgzOTU2fQ.6_mS_wF_V_g7uUf3Jq8g6L4hN2K9mY1Vz7X0W3Q'; // standard anon key setup
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbG5veG1mYmVna2dmZW1uZXEiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczODMwNzk1NiwiZXhwIjoyMDUzODgzOTU2fQ.6_mS_wF_V_g7uUf3Jq8g6L4hN2K9mY1Vz7X0W3Q';
 
-    // Initialize Supabase Client safely
-    let supabaseClient;
-    if (window.supabase) {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    }
+    // Global client declaration
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     document.getElementById('obsForm').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -102,15 +100,22 @@
         };
 
         try {
-            const { data, error } = await supabaseClient.from('safety_observations').insert([payload]);
+            const { data, error } = await _supabase.from('Safety_observations').insert([payload]);
             if (error) {
-                alert("Error saving: " + error.message);
+                // If capitalized table fails, fallback to lowercase table
+                const { error: err2 } = await _supabase.from('safety_observations').insert([payload]);
+                if (err2) {
+                    alert("Error saving: " + err2.message);
+                } else {
+                    alert("Observation saved successfully!");
+                    document.getElementById('obsForm').reset();
+                }
             } else {
                 alert("Observation saved successfully!");
                 document.getElementById('obsForm').reset();
             }
         } catch (err) {
-            alert("Submission error: " + err.message);
+            alert("Network / Submission error: " + err.message);
         } finally {
             btn.disabled = false;
             btn.innerText = "Save Observation";
