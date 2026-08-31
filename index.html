@@ -1,44 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Safety Observation</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f9;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      max-width: 500px;
-      width: 100%;
-      text-align: center;
-    }
-    h1 {
-      color: #0056b3;
-      margin-bottom: 10px;
-    }
-    p {
-      color: #555;
-    }
-  </style>
-</head>
-<body>
+reate table public.observations (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamp with time zone default now(),
+  date_time text not null,
+  location text not null,
+  category text,
+  risk text,
+  description text not null,
+  corrective_action text,
+  responsible text,
+  target_date date,
+  status text default 'Open',
+  photo_data text,
+  project text default 'Swarna',
+  company text default 'Milestones'
+);
 
-  <div class="card">
-    <h1>Safety Observation Portal</h1>
-    <p>Aapka GitHub Pages successfully publish ho gaya hai!</p>
-  </div>
+-- Enable Row Level Security (RLS)
+alter table public.observations enable row level security;
 
-</body>
-</html>
+-- Create policies for public access (Insert, Select, Update)
+create policy "Allow public insert" on public.observations 
+  for insert with check (true);
+
+create policy "Allow public select" on public.observations 
+  for select using (true);
+
+create policy "Allow public update" on public.observations 
+  for update using (true);
